@@ -9,7 +9,7 @@ export const isLoggedIn = async (req, res, next)=>{
             return res.json({success: false, message: "User is not authenticated"})
         }else{
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await userModel.findById(decoded.userId).select("-password")
+            const user = await userModel.findById(decoded.userId).select("-password").populate('messages')
             if(!user) return res.json({success: false, message: "User not found"})
             req.user = user
             next()

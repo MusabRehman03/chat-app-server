@@ -21,7 +21,11 @@ const userSchema = new mongoose.Schema({
     },
     bio: {
         type:String,
-    }
+    },
+    messages:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "message"
+    }]
 },{timestamps:true})
 
 module.exports =  mongoose.model('user', userSchema)
