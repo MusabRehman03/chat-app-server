@@ -1,5 +1,8 @@
+import cloudinary from "../lib/cloudinary.js"
+import message from "../models/messageModel.js"
 import messageModel from "../models/messageModel.js"
 import userModel from "../models/userModel.js"
+import {io, userSocketMap} from "../server.js"
 
 //get all users expect the sender for sidebar
 export const getAllUsersExceptSelf = async (req, res)=>{
@@ -34,4 +37,32 @@ export const getAllMessagesForChatSection = async (req, res)=>{
         return res.json({success: false, message: error.message})
     }
     
+}
+
+export const sendMessage = async (req, res)=>{
+    try {
+        const { recieverId } = req.params
+        const senderId = req.user._id
+        const { text, image } = req.body
+        let imageUrl;
+        if(image){
+            const uploadResponse = await cloudinary.uploader.upload(image)
+            imageUrl = uploadResponse.secure_url
+        }
+        const newMessage = messageModel.create({
+            recieverId,
+            senderId,
+            text,
+            image: imageUrl
+        })
+
+        const recieverSocketId = userSocketMap[recieverId]
+        if(recieverSocketId){
+            io.to(recieverSocketId).emit("newMessage", newMessage)
+        }
+        return res.json({success: true, data: {message: newMessage}})
+    } catch (error) {
+        console.log(error.message)
+        return res.json({success: false, message: error.message})
+    }
 }
