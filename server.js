@@ -7,7 +7,10 @@ import { connectDB } from "./lib/db_connection.js"
 import userRouter from "./routes/userRouter.js"
 import messageRouter from "./routes/messageRoutes.js"
 import { Server } from "socket.io"
-
+import cookieParser from "cookie-parser"
+//create express app and http server
+const app = express()
+const server = http.createServer(app)
 //initialize socket.io
 export const io = new Server(server, {
     cors: {origin: "*"}
@@ -32,13 +35,21 @@ io.on("connection", (socket)=>{
     })
 })
 
-//create express app and http server
-const app = express()
-const server = http.createServer(app)
+
 
 //middleware setup
 app.use(express.json({limit:"4mb"}))
-app.use(cors())
+app.use(cookieParser())
+app.use(
+    cors({
+      origin: "http://localhost:5173", // your React app URL
+      credentials: true, // allow cookies to be sent
+    })
+)
+// app.use((req, res, next) => {
+//     console.log("Cookies received:", req.cookies.token);
+//     next();
+//   });
 app.use("/api/auth", userRouter)
 app.use("/api/messages", messageRouter)
 
@@ -50,6 +61,6 @@ app.get("/api/status", (req, res)=>{ // can be app.use as well
 await connectDB()
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT, ()=>{
+server.listen(PORT, ()=>{
     console.log("server is running on PORT: "+ PORT)
 })

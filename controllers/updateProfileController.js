@@ -1,4 +1,4 @@
-import cloudinary from "../lib/cloudinary"
+import cloudinary from "../lib/cloudinary.js"
 import userModel from "../models/userModel.js"
 
 export const updateProfile = async (req, res)=>{
@@ -8,11 +8,11 @@ export const updateProfile = async (req, res)=>{
         
         if(!profilePic){
             const updatedUser = await userModel.findOneAndUpdate({_id: userId}, {bio, fullName}, {new:true})
-            return res.json({success: true, message:"User details updated successfully", data: {user: updatedUser}})
+            return res.json({success: true, message:"User details updated successfully", user: updatedUser})
         }else{
             const uploaded = await cloudinary.uploader.upload(profilePic)
             const updatedUser = await userModel.findOneAndUpdate({_id: userId}, {bio, fullName, profilePic: uploaded.secure_url}, {new:true})
-            return res.json({success: true, message:"User details updated successfully", data: {user: updatedUser}})
+            return res.json({success: true, message:"User details updated successfully", user: updatedUser})
         }
     } catch (error) {
         return res.json({success: false, message: error.message})
