@@ -1,5 +1,4 @@
 import cloudinary from "../lib/cloudinary.js"
-import message from "../models/messageModel.js"
 import messageModel from "../models/messageModel.js"
 import userModel from "../models/userModel.js"
 import {io, userSocketMap} from "../server.js"
@@ -15,27 +14,64 @@ import {io, userSocketMap} from "../server.js"
 //         return res.json({success: false, message: error.message})
 //     }
 // }
-export const getUsersForSidebar = async (req, res)=>{
+// export const getUsersForSidebar = async (req, res)=>{
+//     try {
+//         const userId = req.user._id
+//         const filteredUsers = await userModel.find({_id: {$ne: userId}}).select('-password')
+//         //count of unseen messages for each user
+//         const unseenMessages = {}
+//         const promises  = filteredUsers.map(async (user)=>{
+//             const messages = await messageModel.find({senderId: user._id, recieverId: userId, seen:false})
+//             if(messages.length>0){
+//                 unseenMessages[user._id]= messages.length
+//             }
+//             await Promise.all(promises)
+//             res.json({success: true, users: filteredUsers, unseenMessages})
+//         })
+//     } catch (error) { 
+//         console.log(error.message)
+//         res.json({success: false, message: "hello there"})
+//     }
+// }
+export const getUsersForSidebar = async (req, res) => {
     try {
-        const userId = req.user._id
-        const filteredUsers = await user.find({_id: {$ne: userId}}).select('-password')
-
-        //count of unseen messages for each user
-        const unseenMessages = {}
-        const promises  = filteredUsers.map(async (user)=>{
-            const messages = await messageModel.find({senderId: user._id, recieverId: userId, seen:false})
-            if(messages.length>0){
-                unseenMessages[user._id]= messages.length
-            }
-            await Promise.all(promises)
-            res.json({success: true, users: filteredUsers, unseenMessages})
-        })
+      const userId = req.user._id;
+  
+      // Get all users except the logged-in one
+      const filteredUsers = await userModel
+        .find({ _id: { $ne: userId } })
+        .select('-password');
+  
+      // For unseen message counts
+      const unseenMessages = {};
+  
+      // Create an array of promises (one per user)
+      const promises = filteredUsers.map(async (user) => {
+        const count = await messageModel.countDocuments({
+          senderId: user._id,
+          recieverId: userId,
+          seen: false,
+        });
+        if (count > 0) unseenMessages[user._id] = count;
+      });
+  
+      // Wait for all message counts to finish
+      await Promise.all(promises);
+  
+      // Send final response once
+      res.json({
+        success: true,
+        users: filteredUsers,
+        unseenMessages,
+        message: "Users fetched successfully",
+      });
+  
     } catch (error) {
-        console.log(error.message)
-        res.json({success: false, message: error.message})
+      console.error(error.message);
+      res.json({ success: false, message: "Something went wrong" });
     }
-}
-
+  };
+  
 // export const getAllMessagesForChatSection = async (req, res)=>{
 //     try {
 //         const { personId } = req.params
@@ -94,7 +130,7 @@ export const markMessageAsSeen = async (req, res) =>{
 
 export const sendMessage = async (req, res)=>{
     try {
-        const { recieverId } = req.params
+        const { id: recieverId } = req.params;
         const senderId = req.user._id
         const { text, image } = req.body
         let imageUrl;
@@ -102,7 +138,7 @@ export const sendMessage = async (req, res)=>{
             const uploadResponse = await cloudinary.uploader.upload(image)
             imageUrl = uploadResponse.secure_url
         }
-        const newMessage = messageModel.create({
+        const newMessage = await messageModel.create({
             recieverId,
             senderId,
             text,
