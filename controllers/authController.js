@@ -48,9 +48,10 @@ export const signUp = async (req, res) => {
   
       res.cookie("token", token, {
         httpOnly: true,
-        secure: false, // must be false for localhost
-        sameSite: "Lax", // or "None" if needed
+        secure: true,            // ✅ true on production
+        sameSite: "none",        // ✅ must be 'none' for cross-origin cookies
       });
+      
   
       res.json({ success: true, message: "Account created successfully", user });
     } catch (error) {
@@ -77,10 +78,11 @@ export const signIn = async (req, res)=>{
                 const token = generateToken(user._id)
                 // res.cookie("token", token)
                 res.cookie("token", token, {
-                    httpOnly: true,
-                    secure: false, // must be false for localhost
-                    sameSite: "Lax", // or "None" if needed
-                  });
+                  httpOnly: true,
+                  secure: true,            // ✅ true on production
+                  sameSite: "none",        // ✅ must be 'none' for cross-origin cookies
+                });
+                
                 res.json({success: true, message: "User authenticated", user: user, token:token})
             }else{
                 return res.json({success: false, message: "Invalid credentials"})
@@ -102,7 +104,11 @@ export const checkAuth = (req, res)=>{
 
 export const logOut = function (req, res) {
     try{
-        res.cookie("token", "");
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
         res.json({success: true, message:"User logged out successfully"})
     }catch(error){
         res.json({success: false, message:error.message})
