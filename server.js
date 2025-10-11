@@ -62,12 +62,20 @@ app.get("/api/status", (req, res)=>{ // can be app.use as well
 //connnect to mongodb
 await connectDB()
 
-if(process.env.NODE_ENV !== "production"){
-    const PORT = process.env.PORT || 5000
-    server.listen(PORT, ()=>{
-        console.log("server is running on PORT: "+ PORT)
-    })
-}
+// for vercel.com
+// if(process.env.NODE_ENV !== "production"){
+//     const PORT = process.env.PORT || 5000
+//     server.listen(PORT, ()=>{
+//         console.log("server is running on PORT: "+ PORT)
+//     })
+// }
 
-//export server for vercel
-export default server;
+// //export server for vercel
+// export default server;
+
+//for render.com
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+  console.log(`✅ Server is running on PORT: ${PORT}`);
+});
