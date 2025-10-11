@@ -40,12 +40,20 @@ io.on("connection", (socket)=>{
 //middleware setup
 app.use(express.json({limit:"4mb"}))
 app.use(cookieParser())
-app.use(
-    cors({
-      origin: "http://localhost:5173", // your React app URL
-      credentials: true, // allow cookies to be sent
-    })
-)
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://chat-app-client-orpin-one.vercel.app" // ✅ your deployed frontend
+  ];
+  app.use(cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true
+  }));
 // app.use((req, res, next) => {
 //     console.log("Cookies received:", req.cookies.token);
 //     next();
